@@ -1,0 +1,52 @@
+FROM php:8.2.1-apache
+
+# Instalar dependências do sistema e extensões PHP necessárias
+RUN apt-get update && apt-get install -y \
+    vim \
+    git \
+    unzip \
+    zip \
+    curl \
+    libzip-dev \
+    libpng-dev \
+    && docker-php-ext-install pdo pdo_mysql mysqli zip    \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Composer globalmente
+RUN curl -sS https://getcomposer.org/installer |  php && \
+mv composer.phar /usr/local/bin/composer && \
+chmod +x /usr/local/bin/composer
+
+# Habilitar mod_rewrite do Apache
+RUN a2enmod rewrite
+
+# Teste se o composer foi instalado
+RUN composer --version
+
+COPY ./start.sh .
+COPY . ./var/www/html/ 
+
+# Define diretório de trabalho
+WORKDIR /var/www/html/
+
+# Cria usuário com UID fixo (igual ao host, 1000 é o mais comum)
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
+# Ajusta permissões de escrita
+RUN chown -R www-data:www-data /var/www/html
+
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/app/public
+
+
+# Atualizar a configuração do Apache para usar o novo DocumentRoot
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
+    sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Instala dependências (se existir composer.json)
+RUN if [ -f composer.json ]; then composer install --no-interaction --prefer-dist; fi
+
+RUN chmod +x start.sh
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]

@@ -1,0 +1,17 @@
+FROM php:8.2-apache
+
+# Instalar dependências do sistema e o Composer
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    zip \
+    && docker-php-ext-install pdo pdo_mysql mysqli
+
+# Habilitar o mod_rewrite do Apache
+RUN a2enmod rewrite
+
+# Instalar o Composer diretamente da fonte oficial
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Definir o diretório de trabalho
+WORKDIR /var/www/html

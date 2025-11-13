@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  php-apache:
+    image: php:8.2-apache
+    container_name: php8-apache
+    ports:
+      - "8080:80"   # acessa em http://localhost:8080
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+    # instala extensões extras (opcional)
+    build:
+      context: .
+      dockerfile: Dockerfile

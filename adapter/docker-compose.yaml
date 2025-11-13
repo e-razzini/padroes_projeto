@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  php-apache:
+    image: php:8.3-apache
+    container_name: php8-apache
+    ports:
+      - "8080:80"   # acessa em http://localhost:8080
+    volumes:
+      - .:/var/www/html
+    environment:
+     - APACHE_DOCUMENT_ROOT=/var/www/html
+    # instala extensões extras (opcional)
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: /bin/sh -c "sleep 2 && ./start.sh && apache2-foreground"
+    
+
+ 
